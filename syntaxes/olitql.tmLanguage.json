@@ -1,0 +1,29 @@
+{
+  "name": "OlitQL",
+  "scopeName": "source.olitql",
+  "injectTo": ["source.ts"],
+  "patterns": [
+    {
+      "name": "keyword.control.olitql",
+      "match": "\"action\"\\s*:\\s*\"(query|update|delete|append|strip|add|create domain|create schema|add account|change password)\""
+    },
+    {
+      "name": "constant.language.olitql",
+      "match": "\\bALL\\b"
+    },
+    {
+      "name": "variable.language.olitql",
+      "match": "\\b_\\b"
+    },
+    {
+      "name": "keyword.operator.olitql",
+      "match": "\\b(=|!=|<>|<=|>=|<|>|LIKE|IN|AND|OR|NOT)\\b"
+    },
+    {
+      "name": "storage.type.olitql",
+      "match": "\\b(string|int|boolean|datetime|money|text)\\b"
+    }
+  ],
+  "repository": {},
+  "scope": "source.olitql"
+}

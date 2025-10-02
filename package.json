@@ -1,0 +1,91 @@
+{
+  "name": "olitstudio",
+  "displayName": "OlitStudio",
+  "description": "A unified Olit language extension for VS Code providing syntax highlighting and tooling for OlitQL (the query language of OlitDB), OlitDOM (the web framework), and the core Olit notation",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "olitstudio.helloWorld",
+        "title": "Hello World, this is Olit Studio!"
+      }
+    ],
+    "languages": [
+      {
+        "id": "olit",
+        "aliases": [
+          "Olit",
+          "olit"
+        ],
+        "extensions": [
+          ".olit"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "olitql",
+        "aliases": [
+          "OlitQL",
+          "olitql"
+        ],
+        "extensions": [
+          ".olitql"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "olitdom",
+        "aliases": [
+          "OlitDOM",
+          "olitdom"
+        ],
+        "extensions": [
+          ".olitdom"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "path": "./syntaxes/olit-injection.json",
+        "scopeName": "embedded.olit.injection",
+        "injectTo": [
+          "source.ts"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.104.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript": "^5.9.2",
+    "ts-loader": "^9.5.4",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}

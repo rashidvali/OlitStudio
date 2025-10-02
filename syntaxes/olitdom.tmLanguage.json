@@ -1,0 +1,6 @@
+{
+  "scopeName": "source.olitdom",
+  "patterns": [
+    { "include": "source.ts" }
+  ]
+}

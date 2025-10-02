@@ -1,0 +1,36 @@
+{
+  "scopeName": "embedded.olit.injection",
+  "injectionSelector": "L:source.ts",
+  "patterns": [
+    {
+      "name": "meta.embedded.block.olit",
+      "begin": "(n|q|d)\\s*`",
+      "end": "`",
+      "beginCaptures": {
+        "0": { "name": "entity.name.function.tagged-template.ts" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.template.end.ts" }
+      },
+      "contentName": "text.olit",
+      "patterns": [
+        {
+          "name": "entity.name.tag.key.olit",
+          "match": "^\\s*[^:\\s]+:"
+        },
+        {
+          "name": "string.unquoted.value.olit", 
+          "match": "^\\s+[^:\\s;][^\\n]*$"
+        },
+        {
+          "name": "punctuation.terminator.array.olit",
+          "match": "^\\s*;$"
+        },
+        {
+          "name": "comment.line.olit",
+          "match": "#.*$"
+        }
+      ]
+    }
+  ]
+}
