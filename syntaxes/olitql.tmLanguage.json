@@ -17,13 +17,26 @@
     },
     {
       "name": "keyword.operator.olitql",
-      "match": "\\b(=|!=|<>|<=|>=|<|>|LIKE|IN|AND|OR|NOT)\\b"
+      "match": "\\b(=|!=|<>|<=|>=|<|>|LIKE|IN|AND|OR|NOT|AND NOT)\\b"
     },
     {
       "name": "storage.type.olitql",
       "match": "\\b(string|int|boolean|datetime|money|text)\\b"
     }
   ],
-  "repository": {},
+  "repository": {
+    "olitInjection": {
+      "patterns": [
+        { "include": "./olit-injection.json" }
+      ]
+    }
+  },
+  "patterns": [
+    {
+      "name": "keyword.control.olitql",
+      "match": "\"action\"\\s*:\\s*\"(query|update|delete|append|strip|add|create domain|create schema|add account|change password)\""
+    },
+    { "include": "#olitInjection" }
+  ],
   "scope": "source.olitql"
 }

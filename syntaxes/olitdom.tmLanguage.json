@@ -1,6 +1,12 @@
 {
   "scopeName": "source.olitdom",
   "patterns": [
-    { "include": "source.ts" }
+    { "include": "source.ts" },
+    {
+      "name": "meta.olitdom",
+      "patterns": [
+        { "include": "./olit-injection.json" }
+      ]
+    }
   ]
 }

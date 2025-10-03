@@ -7,7 +7,8 @@
       "begin": "(n|q|d)\\s*`",
       "end": "`",
       "beginCaptures": {
-        "0": { "name": "entity.name.function.tagged-template.ts" }
+        "1": { "name": "entity.name.function.tagged-template.ts" },
+        "0": { "name": "punctuation.definition.template.begin.ts" }
       },
       "endCaptures": {
         "0": { "name": "punctuation.definition.template.end.ts" }
@@ -15,20 +16,54 @@
       "contentName": "text.olit",
       "patterns": [
         {
-          "name": "entity.name.tag.key.olit",
-          "match": "^\\s*[^:\\s]+:"
+          "name": "comment.line.olit",
+          "match": "#.*$"
         },
         {
-          "name": "string.unquoted.value.olit", 
-          "match": "^\\s+[^:\\s;][^\\n]*$"
+          "name": "punctuation.separator.keyvalue.olit",
+          "match": ":"
         },
         {
           "name": "punctuation.terminator.array.olit",
-          "match": "^\\s*;$"
+          "match": ";"
         },
         {
-          "name": "comment.line.olit",
-          "match": "#.*$"
+          "name": "string.quoted.double.olit",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.olit" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.olit" } },
+          "patterns": [
+            { "name": "string.quoted.double.content.olit", "match": "[\\s\\S]+?" }
+          ]
+        },
+        {
+          "name": "string.unquoted.value.olit",
+          "match": "(?<=:\\s)([^\\n;\\r]+)"
+        },
+        {
+          "name": "constant.key.olit",
+          "match": "^\\s*[^:\\n\\r]+(?=:)"
+        },
+        {
+          "name": "meta.multiline.value.olit",
+          "begin": "(?<=:\\n)\\t+",
+          "end": "(?=^\\s*[^\\t]|$)",
+          "patterns": [
+            { "name": "string.multiline.content.olit", "match": "[\\s\\S]+?" }
+          ]
+        },
+        {
+          "name": "keyword.operator.olit",
+          "match": "\\b(AND|OR|IN|NOT|LIKE|=|!=|<>|<=|>=|<|>)\\b"
+        },
+        {
+          "name": "constant.numeric.olit",
+          "match": "\\b\\d+(?:\\.\\d+)?\\b"
+        },
+        {
+          "name": "punctuation.separator.symbol.olit",
+          "match": "[_#\\-+]"
         }
       ]
     }

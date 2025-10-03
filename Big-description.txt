@@ -1,0 +1,90 @@
+Olit (Object Literal) notation is an indentation based alternative to JSON data format. There is Olit to JSON and JSON to Olit transformations provided by OlitNota.ts. The file resides in src/olit folder and its helper functions are in src/olit/Lib. OlitNota has it's own GitHub repository and in a future has to be linked to OlitStudio either as node module or (if that is possible) as GitHub dependency. For now OlitNota is just in a subfolder.
+Olit Notation provides more human friendly syntax: no curly brackets, no double quotes for keys and values, no commas, double quotes can be used for strings, including multi-line strings but that is not mandatory. Arrays' elements are separated by semicolons.
+
+Here is a JSON structure:
+
+{
+  "action": "add",
+  "isTransactional": true,
+  "statement": [
+    {
+      "Business_Employee": {
+        "Name": "John Doe",
+        "Projects": [
+          {
+            "Project_Code": "A101",
+            "Project_Name": "Project Alpha"
+          },
+          {
+            "Project_Code": "A102",
+            "Project_Name": "Project Beta"
+          }
+        ]
+      }
+    },
+    {
+      "Business_Employee": {
+        "Name": "Jane Smith",
+        "Projects": [
+          {
+            "Project_Code": "B103",
+            "Project_Name": "Project Gamma"
+          }
+        ]
+      }
+    }
+  ]
+}
+
+and here is a corresponding Olit:
+
+	action: add
+	isTransactional: true
+	statement:
+		Business_Employee:
+			Name: John Doe
+			Projects:
+				Project_Code: A101
+				Project_Name: Project Alpha
+				;
+				Project_Code: A102
+				Project_Name: Project Beta
+				;
+		;
+		Business_Employee:
+			Name: Jane Smith
+			Projects:
+				Project_Code: B103
+				Project_Name: Project Gamma
+				;
+		;
+
+OlitStudio VS Code extension is to support three flavors of Olit: 
+
+- Olit Notation - a core language, can represent everything that JSON can do
+- OlitQl is a query language for OlitDB - a document database
+- OlitDOM is a component description/definition language for a web framework
+
+Right now OlitStudio provides a similar basic syntax highlighting for all three:
+- keys are blue
+- values on the level of keys are white
+- values on next rows are light brown
+- semicolons are white
+
+That is how it has to be done. All three have to highlight values differently based on their data types: strings (single row, multi-row, with double quotes, without doubles quotes). 
+If a string is with double quotes, it still can have double quotes inside of the string without any escape. If that is possible, Enclosing double quotes (not those inside) have to be colored differently from strings.
+Single colons and semicolons have to have their own color.
+
+So far that all is applicable to Olit, OlitQl, and OlitDOM.
+
+OlitQl has two the most top-level mandatory keys: 'action ' and 'statement', and one optional key 'isTransactional'. The top-level keys may be extended over time.
+Olit values have to have the highlighting rules for all conditional operators of TSql (an SQL of SQL Server): AND, OR, IN, NOT, LIKE, <, >, = - and others that I could missed. Also, special highlighting for symbols: underscore _, minus -, plus +, number sign #.
+
+OlitDOM 
+OlitDOM has to be TypeScript "aware": values matching TypeScript class, interface, or other TypeScript objects names (if imported in the file) have to be highlighted.
+
+
+There are three tagged template functions, that have to provide syntax highlighting accordingly :
+- n for Olit notation
+- q for OlitQl
+- d for OlitDOM
