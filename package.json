@@ -22,41 +22,6 @@
         "title": "Hello World, this is Olit Studio!"
       }
     ],
-    "languages": [
-      {
-        "id": "olit",
-        "aliases": [
-          "Olit",
-          "olit"
-        ],
-        "extensions": [
-          ".olit"
-        ],
-        "configuration": "./language-configuration.json"
-      },
-      {
-        "id": "olitql",
-        "aliases": [
-          "OlitQL",
-          "olitql"
-        ],
-        "extensions": [
-          ".olitql"
-        ],
-        "configuration": "./language-configuration.json"
-      },
-      {
-        "id": "olitdom",
-        "aliases": [
-          "OlitDOM",
-          "olitdom"
-        ],
-        "extensions": [
-          ".olitdom"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
     "grammars": [
       {
         "path": "./syntaxes/olit-injection.json",
