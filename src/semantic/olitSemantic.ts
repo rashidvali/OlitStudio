@@ -18,7 +18,7 @@ function classifyValue(val: string) {
   if (strEnclosedWith(v, '"')) return 'string';
   if (isNumeric(v)) return 'number';
   if (isBool(v)) return 'keyword';
-  if (isDateLike(v)) return 'number';
+  if (isDateLike(v)) return 'type';
   return 'string';
 }
 
