@@ -33,8 +33,12 @@
   },
   "patterns": [
     {
-      "name": "keyword.control.olitql",
+      "name": "keyword.control",
       "match": "\"action\"\\s*:\\s*\"(query|update|delete|append|strip|add|create domain|create schema|add account|change password)\""
+    },
+    {
+      "name": "keyword.operator",
+      "match": "\\b(=|!=|<>|<=|>=|<|>|LIKE|IN|AND|OR|NOT|BETWEEN|IS|NULL)\\b"
     },
     { "include": "#olitInjection" }
   ],

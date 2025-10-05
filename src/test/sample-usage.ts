@@ -11,7 +11,9 @@ const query = q`
 action: query
 statement:
 	Business_Employee:
-		Name: _ LIKE 'J%'
+		Name1: _ LIKE 'J%'
+		Name2: 
+			_ LIKE 'J%'
 		Projects:
 			Project_Code: _ LIKE 'A%'
 `;

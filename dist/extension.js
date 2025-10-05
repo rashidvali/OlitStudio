@@ -1,8 +1,76 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
-/* 0 */,
+/* 0 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.activate = activate;
+exports.deactivate = deactivate;
+const vscode = __importStar(__webpack_require__(1));
+const olitcore_1 = __webpack_require__(2);
+const olitql_1 = __webpack_require__(7);
+const olitdom_1 = __webpack_require__(8);
+const olitSemantic_1 = __webpack_require__(9);
+function activate(context) {
+    console.log('OLIT extension activated!');
+    // Register the Olit semantic tokens provider for TypeScript documents.
+    // The provider only emits tokens for content inside tagged templates (n`...`, q`...`, d`...`),
+    // so it won't override TypeScript semantic tokens outside those ranges.
+    const provider = new olitSemantic_1.OlitSemanticProvider();
+    const selector = [
+        { language: 'typescript', scheme: 'file' },
+        { language: 'typescriptreact', scheme: 'file' }
+    ];
+    const disposable = vscode.languages.registerDocumentSemanticTokensProvider(selector, provider, olitSemantic_1.legend);
+    context.subscriptions.push(disposable);
+    return { n: olitcore_1.n, q: olitql_1.q, d: olitdom_1.d };
+}
+function deactivate() { }
+
+
+/***/ }),
 /* 1 */
+/***/ ((module) => {
+
+module.exports = require("vscode");
+
+/***/ }),
+/* 2 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -10,7 +78,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.n = exports.olitNota = void 0;
 exports.parseOlit = parseOlit;
 exports.stringifyOlit = stringifyOlit;
-const OlitNota_1 = __webpack_require__(2);
+const OlitNota_1 = __webpack_require__(3);
 exports.olitNota = new OlitNota_1.OlitNota();
 function parseOlit(olitText) {
     return exports.olitNota.olitToJson(olitText);
@@ -27,14 +95,14 @@ exports.n = n;
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OlitNota = exports.StringValue = void 0;
-const Utils_1 = __webpack_require__(3);
-const StringHolder_1 = __webpack_require__(5);
+const Utils_1 = __webpack_require__(4);
+const StringHolder_1 = __webpack_require__(6);
 var StringValue;
 (function (StringValue) {
     StringValue[StringValue["Unquoted"] = 0] = "Unquoted";
@@ -315,7 +383,7 @@ exports.OlitNota = OlitNota;
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -353,8 +421,8 @@ exports.restoreEscapedNewlinesTabs = restoreEscapedNewlinesTabs;
 exports.splitByFirstColon = splitByFirstColon;
 exports.findFirstColon = findFirstColon;
 exports.isOlitList = isOlitList;
-const DateTime_1 = __webpack_require__(4);
-const StringHolder_1 = __webpack_require__(5);
+const DateTime_1 = __webpack_require__(5);
+const StringHolder_1 = __webpack_require__(6);
 // export function isNumber(value: any): boolean {
 //   return !isNaN(value);
 // }
@@ -608,7 +676,7 @@ function isOlitList(entry, intent = null) {
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -664,13 +732,13 @@ function isCrossPlatformDate(str) {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.StringHolder = void 0;
-const Utils_1 = __webpack_require__(3);
+const Utils_1 = __webpack_require__(4);
 class StringHolder {
     buff = new Array();
     constructor(text = "") {
@@ -707,14 +775,14 @@ exports.StringHolder = StringHolder;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.q = void 0;
 exports.parseOlitQl = parseOlitQl;
-const OlitNota_1 = __webpack_require__(2);
+const OlitNota_1 = __webpack_require__(3);
 const olitNota = new OlitNota_1.OlitNota();
 function parseOlitQl(olitql) {
     return olitNota.olitToJson(olitql); // still uses core parser for now
@@ -727,7 +795,7 @@ exports.q = q;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -739,6 +807,155 @@ const d = (strings, ...values) => {
     return {};
 };
 exports.d = d;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.OlitSemanticProvider = exports.legend = void 0;
+const vscode = __importStar(__webpack_require__(1));
+const Utils_1 = __webpack_require__(4);
+const tokenTypes = ['property', 'string', 'number', 'keyword', 'type', 'operator'];
+const tokenModifiers = [];
+exports.legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
+function makeRange(document, offset, length) {
+    const startPos = document.positionAt(offset);
+    return { line: startPos.line, startChar: startPos.character, length };
+}
+function classifyValue(val) {
+    if (val == null)
+        return 'string';
+    const v = val.trim();
+    if (v === '')
+        return 'string';
+    if ((0, Utils_1.strEnclosedWith)(v, '"'))
+        return 'string';
+    if ((0, Utils_1.isNumeric)(v))
+        return 'number';
+    if ((0, Utils_1.isBool)(v))
+        return 'keyword';
+    if ((0, Utils_1.isDateLike)(v))
+        return 'number';
+    return 'string';
+}
+class OlitSemanticProvider {
+    provideDocumentSemanticTokens(document, token) {
+        const builder = new vscode.SemanticTokensBuilder(exports.legend);
+        const text = document.getText();
+        // Find tagged templates n`...`, q`...`, d`...`
+        const re = /(n|q|d)\s*`([\s\S]*?)`/g;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+            const fullMatch = m[0];
+            const tag = m[1];
+            const content = m[2];
+            const matchStart = m.index;
+            // find the start of the content within the document
+            const contentOffset = matchStart + fullMatch.indexOf('`') + 1;
+            // process content line by line, using indexOf to preserve exact offsets (handles CRLF vs LF)
+            const lines = content.split(/\r\n|\n|\r/);
+            let offsetInContent = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                // find the actual position of this line within content starting at offsetInContent
+                const idxInContent = content.indexOf(line, offsetInContent);
+                if (idxInContent === -1) {
+                    // fallback to previous approach
+                    offsetInContent += line.length + 1;
+                    continue;
+                }
+                const absoluteOffset = contentOffset + idxInContent;
+                // Key-value pair on same line: key: val
+                // Use \s for any whitespace and be permissive for key chars (anything except newline or colon)
+                const kv = line.match(/^(\s*)([^:\n\r]+?)\s*:\s*(.*)$/);
+                if (kv) {
+                    const leading = kv[1];
+                    const key = kv[2];
+                    const val = kv[3];
+                    // key position
+                    const keyIndexInLine = line.indexOf(key, leading.length);
+                    const keyOffset = absoluteOffset + keyIndexInLine;
+                    const keyRange = makeRange(document, keyOffset, key.length);
+                    builder.push(keyRange.line, keyRange.startChar, keyRange.length, tokenTypes.indexOf('property'), 0);
+                    // value position (if present)
+                    if (val && val.trim().length > 0) {
+                        const valStart = line.indexOf(val, keyIndexInLine + key.length + 1);
+                        const valOffset = absoluteOffset + valStart;
+                        const valLen = val.trim().length;
+                        const kind = classifyValue(val.trim());
+                        const valRange = makeRange(document, valOffset, valLen);
+                        const typeIndex = tokenTypes.indexOf(kind);
+                        if (typeIndex >= 0)
+                            builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
+                    }
+                }
+                else {
+                    // Check for array element lines (may end with ; or be single value)
+                    const arr = line.match(/^([\t ]*)([^;\n\r]+)\s*;?\s*$/);
+                    if (arr) {
+                        const leading = arr[1];
+                        const txt = arr[2];
+                        const txtIndex = line.indexOf(txt, leading.length);
+                        const txtOffset = absoluteOffset + txtIndex;
+                        const kind = classifyValue(txt.trim());
+                        const valRange = makeRange(document, txtOffset, txt.trim().length);
+                        const typeIndex = tokenTypes.indexOf(kind);
+                        if (typeIndex >= 0)
+                            builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
+                    }
+                }
+                // advance offsetInContent by line length plus actual newline length (if any)
+                const afterIdx = idxInContent + line.length;
+                let nlLen = 0;
+                if (content.charAt(afterIdx) === '\r') {
+                    nlLen = content.charAt(afterIdx + 1) === '\n' ? 2 : 1;
+                }
+                else if (content.charAt(afterIdx) === '\n') {
+                    nlLen = 1;
+                }
+                offsetInContent = idxInContent + line.length + nlLen;
+            }
+        }
+        return builder.build();
+    }
+}
+exports.OlitSemanticProvider = OlitSemanticProvider;
 
 
 /***/ })
@@ -762,33 +979,20 @@ exports.d = d;
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
-(() => {
-var exports = __webpack_exports__;
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.activate = activate;
-exports.deactivate = deactivate;
-const olitcore_1 = __webpack_require__(1);
-const olitql_1 = __webpack_require__(6);
-const olitdom_1 = __webpack_require__(7);
-function activate(context) {
-    console.log('OLIT extension activated!');
-    return { n: olitcore_1.n, q: olitql_1.q, d: olitdom_1.d };
-}
-function deactivate() { }
-
-})();
-
-module.exports = __webpack_exports__;
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__(0);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=extension.js.map

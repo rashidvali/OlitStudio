@@ -1,6 +1,6 @@
 {
   "scopeName": "embedded.olit.injection",
-  "injectionSelector": "L:source.ts",
+  "injectionSelector": "source.ts meta.var.expr.ts",
   "patterns": [
     {
       "name": "meta.embedded.block.olit",
@@ -16,53 +16,74 @@
       "contentName": "text.olit",
       "patterns": [
         {
-          "name": "comment.line.olit",
+          "name": "comment.line",
           "match": "#.*$"
         },
         {
-          "name": "punctuation.separator.keyvalue.olit",
+            "name": "meta.key-value.single-line",
+            "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(?:(\"[^\"]*\")|(\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?(?:Z|[+\\-]\\d{2}:\\d{2})?)?)|(\\d{4}-\\d{2}-\\d{2} \\\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?)|([+-]?\\d+(?:\\.\\d+)?)|(true|false)\\b|([^\\n;]+)))",
+            "captures": {
+              "1": { "name": "variable.other.property" },
+              "2": { "name": "punctuation.separator.key-value" },
+              "3": { "name": "string.quoted.double" },
+              "4": { "name": "constant.other.date" },
+              "5": { "name": "constant.other.date" },
+              "6": { "name": "constant.numeric" },
+              "7": { "name": "constant.language.boolean" },
+              "8": { "name": "string.unquoted" }
+            }
+          },
+        {
+          "name": "punctuation.separator.key-value",
           "match": ":"
         },
         {
-          "name": "punctuation.terminator.array.olit",
+          "name": "punctuation.terminator",
           "match": ";"
         },
         {
-          "name": "string.quoted.double.olit",
+          "name": "string.quoted.double",
           "begin": "\"",
           "end": "\"",
-          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.olit" } },
-          "endCaptures": { "0": { "name": "punctuation.definition.string.end.olit" } },
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end" } },
           "patterns": [
-            { "name": "string.quoted.double.content.olit", "match": "[\\s\\S]+?" }
+            { "name": "string.quoted.double", "match": "[\\s\\S]+?" }
           ]
         },
         {
-          "name": "string.unquoted.value.olit",
+          "name": "string",
           "match": "(?<=:\\s)([^\\n;\\r]+)"
         },
         {
-          "name": "constant.key.olit",
-          "match": "^\\s*[^:\\n\\r]+(?=:)"
+          "name": "variable.other.property",
+          "match": "^\\s*[^:\\n\\r]+(?=:)",
+          "captures": {
+            "0": { "name": "variable.other.property" }
+          }
         },
         {
-          "name": "meta.multiline.value.olit",
+          "name": "string",
           "begin": "(?<=:\\n)\\t+",
           "end": "(?=^\\s*[^\\t]|$)",
           "patterns": [
-            { "name": "string.multiline.content.olit", "match": "[\\s\\S]+?" }
+            { "name": "string", "match": "[\\s\\S]+?" }
           ]
         },
         {
-          "name": "keyword.operator.olit",
+          "name": "keyword.operator",
           "match": "\\b(AND|OR|IN|NOT|LIKE|=|!=|<>|<=|>=|<|>)\\b"
         },
         {
-          "name": "constant.numeric.olit",
+          "name": "constant.numeric",
           "match": "\\b\\d+(?:\\.\\d+)?\\b"
         },
         {
-          "name": "punctuation.separator.symbol.olit",
+          "name": "constant.language.boolean",
+          "match": "(?<=:\\s*)(?:true|false)\\b"
+        },
+        {
+          "name": "punctuation.definition.symbol",
           "match": "[_#\\-+]"
         }
       ]

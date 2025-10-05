@@ -9,12 +9,15 @@ FirstName: Anna
 LastName: Bosh Dodo
 Location:
 	Building: G101
-	Floor: 3
+	Floor: 
+		3
 	Room: 304
 Books:
 	Oliver Twist
 	;
 	War and Piece
+	;
+	2024-11-04
 `;
 
 // Test OlitQl
