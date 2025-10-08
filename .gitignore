@@ -7,3 +7,4 @@ dist/
 .vscode-test/user-data/logs/
 .vscode-test/
 out/
+package-lock.json

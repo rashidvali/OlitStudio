@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { isNumeric, isBool, isDateLike, isString, strEnclosedWith } from '../olit/Lib/Utils';
+import { isNumeric, isBool, isDateLike, strEnclosedWith } from '../olit/Lib/Utils';
 
-const tokenTypes = ['property', 'string', 'number', 'keyword', 'type', 'operator'];
+const tokenTypes = ['property', 'string', 'number', 'keyword', 'type', 'operator', 'variable'];
 const tokenModifiers: string[] = [];
 
 export const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
@@ -15,10 +15,10 @@ function classifyValue(val: string) {
   if (val == null) return 'string';
   const v = val.trim();
   if (v === '') return 'string';
-  if (strEnclosedWith(v, '"')) return 'string';
+  if (strEnclosedWith(v, '"') || strEnclosedWith(v, "'")) return 'string';
   if (isNumeric(v)) return 'number';
   if (isBool(v)) return 'keyword';
-  if (isDateLike(v)) return 'type';
+  if (isDateLike(v)) return 'number';
   return 'string';
 }
 
@@ -35,74 +35,96 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
       const fullMatch = m[0];
-      const tag = m[1];
       const content = m[2];
       const matchStart = m.index;
-      // find the start of the content within the document
       const contentOffset = matchStart + fullMatch.indexOf('`') + 1;
 
-      // process content line by line, using indexOf to preserve exact offsets (handles CRLF vs LF)
-      const lines = content.split(/\r\n|\n|\r/);
+      const lines = content.split(/\n/);
       let offsetInContent = 0;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        // find the actual position of this line within content starting at offsetInContent
-        const idxInContent = content.indexOf(line, offsetInContent);
-        if (idxInContent === -1) {
-          // fallback to previous approach
-          offsetInContent += line.length + 1;
-          continue;
-        }
-        const absoluteOffset = contentOffset + idxInContent;
+        const absoluteOffset = contentOffset + offsetInContent;
 
-        // Key-value pair on same line: key: val
-        // Use \s for any whitespace and be permissive for key chars (anything except newline or colon)
-        const kv = line.match(/^(\s*)([^:\n\r]+?)\s*:\s*(.*)$/);
+        // key: value
+        const kv = line.match(/^([\t ]*)([^:\t\n][^:]*?)\s*:\s*(.*)$/);
         if (kv) {
           const leading = kv[1];
           const key = kv[2];
           const val = kv[3];
 
-          // key position
           const keyIndexInLine = line.indexOf(key, leading.length);
           const keyOffset = absoluteOffset + keyIndexInLine;
           const keyRange = makeRange(document, keyOffset, key.length);
           builder.push(keyRange.line, keyRange.startChar, keyRange.length, tokenTypes.indexOf('property'), 0);
 
-          // value position (if present)
+          // For same-line key:value pairs we emit a semantic token for the value
+          // (string/number/keyword) so it colors correctly even if the TextMate
+          // injection isn't applied in the editor. This is limited to content
+          // inside tagged templates so it doesn't override TypeScript tokens.
           if (val && val.trim().length > 0) {
             const valStart = line.indexOf(val, keyIndexInLine + key.length + 1);
             const valOffset = absoluteOffset + valStart;
-            const valLen = val.trim().length;
-            const kind = classifyValue(val.trim());
-            const valRange = makeRange(document, valOffset, valLen);
-            const typeIndex = tokenTypes.indexOf(kind as any);
-            if (typeIndex >= 0) builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
+            const trimmed = val.trim();
+
+            // Do not include surrounding quotes in the emitted range so punctuation
+            // remains colored by TextMate where possible.
+            let innerStart = 0;
+            let innerLen = trimmed.length;
+            if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+              innerStart = 1;
+              innerLen = trimmed.length - 2;
+            }
+
+            if (innerLen > 0) {
+              const kind = classifyValue(trimmed.substring(innerStart, innerStart + innerLen));
+              const valRange = makeRange(document, valOffset + val.indexOf(trimmed) + innerStart, innerLen);
+              const typeIndex = tokenTypes.indexOf(kind as any);
+              if (typeIndex >= 0) builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
+            }
           }
         } else {
-          // Check for array element lines (may end with ; or be single value)
+          // array-like or standalone values
           const arr = line.match(/^([\t ]*)([^;\n\r]+)\s*;?\s*$/);
           if (arr) {
             const leading = arr[1];
             const txt = arr[2];
             const txtIndex = line.indexOf(txt, leading.length);
             const txtOffset = absoluteOffset + txtIndex;
-            const kind = classifyValue(txt.trim());
-            const valRange = makeRange(document, txtOffset, txt.trim().length);
+
+            // Emit variable tokens for standalone underscores
+            const underscoreRegex = /(^|[^A-Za-z0-9_])_(?![A-Za-z0-9_])/g;
+            let uMatch: RegExpExecArray | null;
+            while ((uMatch = underscoreRegex.exec(txt)) !== null) {
+              const leftLen = uMatch[1] ? uMatch[1].length : 0;
+              const underscoreIndexInVal = uMatch.index + leftLen;
+              const underscoreOffset = txtOffset + underscoreIndexInVal;
+              const underscoreRange = makeRange(document, underscoreOffset, 1);
+              const varIndex = tokenTypes.indexOf('variable');
+              if (varIndex >= 0) builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
+            }
+
+            // Emit operator tokens (LIKE, IN, =, etc.)
+            const opRegex = /\b(LIKE|IN|=|!=|<>|<=|>=|<|>|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
+            let opMatch: RegExpExecArray | null;
+            while ((opMatch = opRegex.exec(txt)) !== null) {
+              const op = opMatch[1] || opMatch[0];
+              const opIndexInVal = opMatch.index;
+              const opOffset = txtOffset + opIndexInVal;
+              const opRange = makeRange(document, opOffset, op.length);
+              const opIndex = tokenTypes.indexOf('operator');
+              if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+            }
+
+            // Fallback: emit semantic tokens for the content runs (numbers/strings/bools)
+            const trimmed = txt.trim();
+            const kind = classifyValue(trimmed);
+            const valRange = makeRange(document, txtOffset + txt.indexOf(trimmed), trimmed.length);
             const typeIndex = tokenTypes.indexOf(kind as any);
             if (typeIndex >= 0) builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
           }
         }
 
-        // advance offsetInContent by line length plus actual newline length (if any)
-        const afterIdx = idxInContent + line.length;
-        let nlLen = 0;
-        if (content.charAt(afterIdx) === '\r') {
-          nlLen = content.charAt(afterIdx + 1) === '\n' ? 2 : 1;
-        } else if (content.charAt(afterIdx) === '\n') {
-          nlLen = 1;
-        }
-        offsetInContent = idxInContent + line.length + nlLen;
+        offsetInContent += lines[i].length + 1;
       }
     }
 

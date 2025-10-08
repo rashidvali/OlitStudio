@@ -27,7 +27,8 @@
         "path": "./syntaxes/olit-injection.json",
         "scopeName": "embedded.olit.injection",
         "injectTo": [
-          "source.ts"
+          "source.ts",
+          "string.template.ts"
         ]
       }
     ]

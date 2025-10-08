@@ -22,7 +22,7 @@ Books:
 
 // Test OlitQl
 const query = q`
-action: create domain
+action: _ create domain
 domains:
 	Business
 	;
