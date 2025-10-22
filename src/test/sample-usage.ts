@@ -15,5 +15,5 @@ statement:
 		F_Name2: 
 			_  =='J%'
 		Projects:
-			Project_Code: _ LIKE +  '_A%'
+			Project_Code: _ LIKE + - '_A%'
 `;

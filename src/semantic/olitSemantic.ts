@@ -89,7 +89,7 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             }
 
             // Handle symbol operators (=, !=, <>, etc.) without word boundaries
-            const symbolOpRegex = /(!=|<>|<=|>=|=|<|>)/g;
+            const symbolOpRegex = /(!=|<>|<=|>=|=|<|>|\+|-)/g;
             let symbolOpMatch: RegExpExecArray | null;
             while ((symbolOpMatch = symbolOpRegex.exec(content)) !== null) {
               const op = symbolOpMatch[1] || symbolOpMatch[0];
@@ -170,7 +170,7 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             }
 
             // Handle symbol operators (=, !=, <>, etc.) without word boundaries
-            const symbolOpRegex2 = /(!=|<>|<=|>=|=|<|>)/g;
+            const symbolOpRegex2 = /(!=|<>|<=|>=|=|<|>|\+|-)/g;
             let symbolOpMatch2: RegExpExecArray | null;
             while ((symbolOpMatch2 = symbolOpRegex2.exec(txt)) !== null) {
               const op = symbolOpMatch2[1] || symbolOpMatch2[0];
