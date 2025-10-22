@@ -73,11 +73,27 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             let hasSpecificTokens = false;
 
             // emit operator tokens inside the value
-            const opRegex = /\b(LIKE|IN|=|!=|<>|<=|>=|<|>|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
-            let opMatch: RegExpExecArray | null;
-            while ((opMatch = opRegex.exec(content)) !== null) {
-              const op = opMatch[1] || opMatch[0];
-              const opIndexInVal = opMatch.index;
+            // Handle word operators (LIKE, IN, etc.) with word boundaries
+            const wordOpRegex = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
+            let wordOpMatch: RegExpExecArray | null;
+            while ((wordOpMatch = wordOpRegex.exec(content)) !== null) {
+              const op = wordOpMatch[1] || wordOpMatch[0];
+              const opIndexInVal = wordOpMatch.index;
+              const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
+              const opRange = makeRange(document, opOffset, op.length);
+              const opIndex = tokenTypes.indexOf('operator');
+              if (opIndex >= 0) {
+                builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                hasSpecificTokens = true;
+              }
+            }
+
+            // Handle symbol operators (=, !=, <>, etc.) without word boundaries
+            const symbolOpRegex = /(!=|<>|<=|>=|=|<|>)/g;
+            let symbolOpMatch: RegExpExecArray | null;
+            while ((symbolOpMatch = symbolOpRegex.exec(content)) !== null) {
+              const op = symbolOpMatch[1] || symbolOpMatch[0];
+              const opIndexInVal = symbolOpMatch.index;
               const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
               const opRange = makeRange(document, opOffset, op.length);
               const opIndex = tokenTypes.indexOf('operator');
@@ -111,9 +127,18 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             }
           }
         } else {
-          // array-like or standalone values
-          const arr = line.match(/^([\t ]*)([^;\n\r]+)\s*;?\s*$/);
-          if (arr) {
+          // Check for key-only lines (key: with nothing after colon)
+          const keyOnlyMatch = line.match(/^\s*([^:\n\r]+):\s*$/);
+          if (keyOnlyMatch) {
+            const key = keyOnlyMatch[1];
+            const keyIndexInLine = line.indexOf(key);
+            const keyOffset = absoluteOffset + keyIndexInLine;
+            const keyRange = makeRange(document, keyOffset, key.length);
+            builder.push(keyRange.line, keyRange.startChar, keyRange.length, tokenTypes.indexOf('property'), 0);
+          } else {
+            // array-like or standalone values
+            const arr = line.match(/^([\t ]*)([^;\n\r]+)\s*;?\s*$/);
+            if (arr) {
             const leading = arr[1];
             const txt = arr[2];
             const txtIndex = line.indexOf(txt, leading.length);
@@ -132,11 +157,24 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             }
 
             // Emit operator tokens in array/multiline values
-            const opRegex = /\b(LIKE|IN|=|!=|<>|<=|>=|<|>|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
-            let opMatch: RegExpExecArray | null;
-            while ((opMatch = opRegex.exec(txt)) !== null) {
-              const op = opMatch[1] || opMatch[0];
-              const opIndexInVal = opMatch.index;
+            // Handle word operators (LIKE, IN, etc.) with word boundaries
+            const wordOpRegex2 = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
+            let wordOpMatch2: RegExpExecArray | null;
+            while ((wordOpMatch2 = wordOpRegex2.exec(txt)) !== null) {
+              const op = wordOpMatch2[1] || wordOpMatch2[0];
+              const opIndexInVal = wordOpMatch2.index;
+              const opOffset = txtOffset + opIndexInVal;
+              const opRange = makeRange(document, opOffset, op.length);
+              const opIndex = tokenTypes.indexOf('operator');
+              if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+            }
+
+            // Handle symbol operators (=, !=, <>, etc.) without word boundaries
+            const symbolOpRegex2 = /(!=|<>|<=|>=|=|<|>)/g;
+            let symbolOpMatch2: RegExpExecArray | null;
+            while ((symbolOpMatch2 = symbolOpRegex2.exec(txt)) !== null) {
+              const op = symbolOpMatch2[1] || symbolOpMatch2[0];
+              const opIndexInVal = symbolOpMatch2.index;
               const opOffset = txtOffset + opIndexInVal;
               const opRange = makeRange(document, opOffset, op.length);
               const opIndex = tokenTypes.indexOf('operator');
@@ -149,6 +187,7 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             const valRange = makeRange(document, txtOffset + txt.indexOf(trimmed), trimmed.length);
             const typeIndex = tokenTypes.indexOf(kind as any);
             if (typeIndex >= 0) builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
+            }
           }
         }
 

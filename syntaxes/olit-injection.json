@@ -17,7 +17,7 @@
        "patterns": [
         {
           "name": "meta.key-only",
-          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)$",
+          "match": "^\\s*([^:\\n\\r]+)(:)\\s*$",
           "captures": {
             "1": { "name": "variable.other.property" },
             "2": { "name": "punctuation.separator.key-value" }

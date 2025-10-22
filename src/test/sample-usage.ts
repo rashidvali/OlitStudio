@@ -8,12 +8,12 @@ Person:
 `;
 
 const query = q`
-action: query
+action: _ query
 statement:
 	Business_Employee:
-		Name1: _ LIKE 'J%'
-		Name2: 
-			_ LIKE 'J%'
+		F.Name1: _ LIKE 'J%'
+		F_Name2: 
+			_  =='J%'
 		Projects:
-			Project_Code: _ LIKE 'A%'
+			Project_Code: _ LIKE +  '_A%'
 `;
