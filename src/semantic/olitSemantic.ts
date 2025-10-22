@@ -45,38 +45,66 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
         const line = lines[i];
         const absoluteOffset = contentOffset + offsetInContent;
 
-        // key: value
-        const kv = line.match(/^([\t ]*)([^:\t\n][^:]*?)\s*:\s*(.*)$/);
-        if (kv) {
-          const leading = kv[1];
-          const key = kv[2];
-          const val = kv[3];
+        // Try a robust same-line key:value match first
+        const kvMatch = line.match(/^\s*([^:\n\r]+)\s*:\s*([^;\n\r]+)/);
+        if (kvMatch) {
+          const key = kvMatch[1];
+          const val = kvMatch[2];
 
-          const keyIndexInLine = line.indexOf(key, leading.length);
+          const keyIndexInLine = line.indexOf(key);
           const keyOffset = absoluteOffset + keyIndexInLine;
           const keyRange = makeRange(document, keyOffset, key.length);
           builder.push(keyRange.line, keyRange.startChar, keyRange.length, tokenTypes.indexOf('property'), 0);
 
-          // For same-line key:value pairs we emit a semantic token for the value
-          // (string/number/keyword) so it colors correctly even if the TextMate
-          // injection isn't applied in the editor. This is limited to content
-          // inside tagged templates so it doesn't override TypeScript tokens.
-          if (val && val.trim().length > 0) {
-            const valStart = line.indexOf(val, keyIndexInLine + key.length + 1);
-            const valOffset = absoluteOffset + valStart;
-            const trimmed = val.trim();
+          // Emit semantic token for inner value (exclude surrounding quotes)
+          const valIndexInLine = line.indexOf(val, keyIndexInLine + key.length);
+          const valOffset = absoluteOffset + valIndexInLine;
+          const trimmed = val.trim();
+          let innerStart = 0;
+          let innerLen = trimmed.length;
+          if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+            innerStart = 1;
+            innerLen = trimmed.length - 2;
+          }
+          if (innerLen > 0) {
+            const content = trimmed.substring(innerStart, innerStart + innerLen);
+            
+            // Track if we emit specific tokens (operators/underscores)
+            let hasSpecificTokens = false;
 
-            // Do not include surrounding quotes in the emitted range so punctuation
-            // remains colored by TextMate where possible.
-            let innerStart = 0;
-            let innerLen = trimmed.length;
-            if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-              innerStart = 1;
-              innerLen = trimmed.length - 2;
+            // emit operator tokens inside the value
+            const opRegex = /\b(LIKE|IN|=|!=|<>|<=|>=|<|>|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
+            let opMatch: RegExpExecArray | null;
+            while ((opMatch = opRegex.exec(content)) !== null) {
+              const op = opMatch[1] || opMatch[0];
+              const opIndexInVal = opMatch.index;
+              const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
+              const opRange = makeRange(document, opOffset, op.length);
+              const opIndex = tokenTypes.indexOf('operator');
+              if (opIndex >= 0) {
+                builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                hasSpecificTokens = true;
+              }
             }
 
-            if (innerLen > 0) {
-              const kind = classifyValue(trimmed.substring(innerStart, innerStart + innerLen));
+            // emit underscore tokens inside the value
+            const underscoreRegex = /(^|[^A-Za-z0-9_])_(?![A-Za-z0-9_])/g;
+            let uMatch: RegExpExecArray | null;
+            while ((uMatch = underscoreRegex.exec(content)) !== null) {
+              const leftLen = uMatch[1] ? uMatch[1].length : 0;
+              const underscoreIndexInVal = uMatch.index + leftLen;
+              const underscoreOffset = valOffset + val.indexOf(trimmed) + innerStart + underscoreIndexInVal;
+              const underscoreRange = makeRange(document, underscoreOffset, 1);
+              const varIndex = tokenTypes.indexOf('variable');
+              if (varIndex >= 0) {
+                builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
+                hasSpecificTokens = true;
+              }
+            }
+
+            // Only emit the broad value token if we didn't emit specific tokens
+            if (!hasSpecificTokens) {
+              const kind = classifyValue(content);
               const valRange = makeRange(document, valOffset + val.indexOf(trimmed) + innerStart, innerLen);
               const typeIndex = tokenTypes.indexOf(kind as any);
               if (typeIndex >= 0) builder.push(valRange.line, valRange.startChar, valRange.length, typeIndex, 0);
@@ -103,7 +131,7 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               if (varIndex >= 0) builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
             }
 
-            // Emit operator tokens (LIKE, IN, =, etc.)
+            // Emit operator tokens in array/multiline values
             const opRegex = /\b(LIKE|IN|=|!=|<>|<=|>=|<|>|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
             let opMatch: RegExpExecArray | null;
             while ((opMatch = opRegex.exec(txt)) !== null) {
