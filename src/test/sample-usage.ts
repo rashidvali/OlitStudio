@@ -17,4 +17,6 @@ statement:
 			_  =='J%'
 		Projects:
 			Project_Code: _ LIKE + - '_A%'
+			;
+			ddd
 `;

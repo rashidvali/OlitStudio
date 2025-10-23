@@ -56,6 +56,20 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
           const keyRange = makeRange(document, keyOffset, key.length);
           builder.push(keyRange.line, keyRange.startChar, keyRange.length, tokenTypes.indexOf('property'), 0);
 
+          // Emit colon separator token
+          const colonMatch = line.match(/:/);
+          if (colonMatch) {
+            const colonIndex = line.indexOf(':', keyIndexInLine + key.length);
+            if (colonIndex >= 0) {
+              const colonOffset = absoluteOffset + colonIndex;
+              const colonRange = makeRange(document, colonOffset, 1);
+              const keywordIndex = tokenTypes.indexOf('keyword');
+              if (keywordIndex >= 0) {
+                builder.push(colonRange.line, colonRange.startChar, colonRange.length, keywordIndex, 0);
+              }
+            }
+          }
+
           // Emit semantic token for inner value (exclude surrounding quotes)
           const valIndexInLine = line.indexOf(val, keyIndexInLine + key.length);
           const valOffset = absoluteOffset + valIndexInLine;
@@ -132,6 +146,22 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               }
             }
 
+            // emit semicolon and colon tokens in values
+            const punctuationRegex = /[;:]/g;
+            let punctMatch: RegExpExecArray | null;
+            while ((punctMatch = punctuationRegex.exec(content)) !== null) {
+              const punctChar = punctMatch[0];
+              const punctIndexInVal = punctMatch.index;
+              const punctOffset = valOffset + val.indexOf(trimmed) + innerStart + punctIndexInVal;
+              const punctRange = makeRange(document, punctOffset, 1);
+              const keywordIndex = tokenTypes.indexOf('keyword');
+              if (keywordIndex >= 0) {
+                console.log(`Emitting punctuation '${punctChar}' at line:${punctRange.line} char:${punctRange.startChar}`);
+                builder.push(punctRange.line, punctRange.startChar, punctRange.length, keywordIndex, 0);
+                hasSpecificTokens = true;
+              }
+            }
+
             // emit double quote tokens only for delimiter quotes (full enclosure)
             if (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length > 1) {
               const quoteOffset = valOffset + val.indexOf(trimmed);
@@ -167,6 +197,17 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             const keyOffset = absoluteOffset + keyIndexInLine;
             const keyRange = makeRange(document, keyOffset, key.length);
             builder.push(keyRange.line, keyRange.startChar, keyRange.length, tokenTypes.indexOf('property'), 0);
+            
+            // Emit colon token for key-only lines
+            const colonIndex = line.indexOf(':', keyIndexInLine + key.length);
+            if (colonIndex >= 0) {
+              const colonOffset = absoluteOffset + colonIndex;
+              const colonRange = makeRange(document, colonOffset, 1);
+              const keywordIndex = tokenTypes.indexOf('keyword');
+              if (keywordIndex >= 0) {
+                builder.push(colonRange.line, colonRange.startChar, colonRange.length, keywordIndex, 0);
+              }
+            }
           } else {
             // array-like or standalone values
             const arr = line.match(/^([\t ]*)([^;\n\r]+)\s*;?\s*$/);
@@ -222,6 +263,21 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               const quoteRange = makeRange(document, quoteOffset, 1);
               const operatorIndex = tokenTypes.indexOf('operator');
               if (operatorIndex >= 0) builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
+            }
+
+            // emit semicolon and colon tokens in array/multiline values
+            const punctuationRegex2 = /[;:]/g;
+            let punctMatch2: RegExpExecArray | null;
+            while ((punctMatch2 = punctuationRegex2.exec(txt)) !== null) {
+              const punctChar2 = punctMatch2[0];
+              const punctIndexInVal = punctMatch2.index;
+              const punctOffset = txtOffset + punctIndexInVal;
+              const punctRange = makeRange(document, punctOffset, 1);
+              const keywordIndex = tokenTypes.indexOf('keyword');
+              if (keywordIndex >= 0) {
+                console.log(`Emitting punctuation2 '${punctChar2}' at line:${punctRange.line} char:${punctRange.startChar}`);
+                builder.push(punctRange.line, punctRange.startChar, punctRange.length, keywordIndex, 0);
+              }
             }
 
             // Fallback: emit semantic tokens for the content runs (numbers/strings/bools)
