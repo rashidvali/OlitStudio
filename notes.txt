@@ -1,1 +1,24 @@
 npm run compile
+
+
+
+
+🏆 Complete Feature Set:
+✅ Keys → Blue (property highlighting)
+✅ Values → Context-aware classification (numbers, strings, booleans, dates)
+✅ Operators → Highlighted (=, !=, <>, <=, >=, <, >, +, -, LIKE, IN, BETWEEN, IS, NULL, AND, OR, NOT)
+✅ Underscores (_) → Blue placeholder highlighting
+✅ Single quotes (') → Always highlighted as string content
+✅ Double quotes (") → Highlighted as string delimiters
+✅ Colons (:) → Distinct color for key-value separators
+✅ Semicolons (;) → Distinct color anywhere they appear
+✅ Percentage (%) → Only highlighted inside single-quoted strings
+✅ Context-aware rules → Nothing highlighted inside single quotes except %
+
+🛠 Robust Architecture:
+Dual-layer system: TextMate grammar + Semantic tokens
+Context sensitivity: Different behavior inside vs outside single quotes
+Global coverage: Works in all contexts (key:value, key-only, multiline, arrays)
+Conflict resolution: Proper token precedence and overlap handling
+Performance optimized: Efficient regex patterns and parsing logic
+🎨 From Brown to Beautiful:
