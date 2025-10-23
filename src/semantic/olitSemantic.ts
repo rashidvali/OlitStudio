@@ -22,6 +22,16 @@ function classifyValue(val: string) {
   return 'string';
 }
 
+function isInsideSingleQuotes(text: string, position: number): boolean {
+  let quoteCount = 0;
+  for (let i = 0; i < position; i++) {
+    if (text[i] === "'") {
+      quoteCount++;
+    }
+  }
+  return quoteCount % 2 === 1; // odd number means we're inside quotes
+}
+
 export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvider {
   public provideDocumentSemanticTokens(
     document: vscode.TextDocument,
@@ -54,7 +64,6 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
           const semiRange = makeRange(document, semiOffset, 1);
           const keywordIndex = tokenTypes.indexOf('keyword');
           if (keywordIndex >= 0) {
-            console.log(`Emitting global semicolon at line:${semiRange.line} char:${semiRange.startChar}`);
             builder.push(semiRange.line, semiRange.startChar, semiRange.length, keywordIndex, 0);
           }
         }
@@ -100,49 +109,61 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             // Track if we emit specific tokens (operators/underscores)
             let hasSpecificTokens = false;
 
-            // emit operator tokens inside the value
+            // emit operator tokens inside the value (skip if inside single quotes)
             // Handle word operators (LIKE, IN, etc.) with word boundaries
             const wordOpRegex = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
             let wordOpMatch: RegExpExecArray | null;
             while ((wordOpMatch = wordOpRegex.exec(content)) !== null) {
               const op = wordOpMatch[1] || wordOpMatch[0];
               const opIndexInVal = wordOpMatch.index;
-              const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
-              const opRange = makeRange(document, opOffset, op.length);
-              const opIndex = tokenTypes.indexOf('operator');
-              if (opIndex >= 0) {
-                builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
-                hasSpecificTokens = true;
+              
+              // Skip if this operator is inside single quotes
+              if (!isInsideSingleQuotes(content, opIndexInVal)) {
+                const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
+                const opRange = makeRange(document, opOffset, op.length);
+                const opIndex = tokenTypes.indexOf('operator');
+                if (opIndex >= 0) {
+                  builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                  hasSpecificTokens = true;
+                }
               }
             }
 
-            // Handle symbol operators (=, !=, <>, etc.) without word boundaries
+            // Handle symbol operators (=, !=, <>, etc.) without word boundaries (skip if inside single quotes)
             const symbolOpRegex = /(!=|<>|<=|>=|=|<|>|\+|-)/g;
             let symbolOpMatch: RegExpExecArray | null;
             while ((symbolOpMatch = symbolOpRegex.exec(content)) !== null) {
               const op = symbolOpMatch[1] || symbolOpMatch[0];
               const opIndexInVal = symbolOpMatch.index;
-              const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
-              const opRange = makeRange(document, opOffset, op.length);
-              const opIndex = tokenTypes.indexOf('operator');
-              if (opIndex >= 0) {
-                builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
-                hasSpecificTokens = true;
+              
+              // Skip if this operator is inside single quotes
+              if (!isInsideSingleQuotes(content, opIndexInVal)) {
+                const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
+                const opRange = makeRange(document, opOffset, op.length);
+                const opIndex = tokenTypes.indexOf('operator');
+                if (opIndex >= 0) {
+                  builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                  hasSpecificTokens = true;
+                }
               }
             }
 
-            // emit underscore tokens inside the value
+            // emit underscore tokens inside the value (skip if inside single quotes)
             const underscoreRegex = /(^|[^A-Za-z0-9_])_(?![A-Za-z0-9_])/g;
             let uMatch: RegExpExecArray | null;
             while ((uMatch = underscoreRegex.exec(content)) !== null) {
               const leftLen = uMatch[1] ? uMatch[1].length : 0;
               const underscoreIndexInVal = uMatch.index + leftLen;
-              const underscoreOffset = valOffset + val.indexOf(trimmed) + innerStart + underscoreIndexInVal;
-              const underscoreRange = makeRange(document, underscoreOffset, 1);
-              const varIndex = tokenTypes.indexOf('variable');
-              if (varIndex >= 0) {
-                builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
-                hasSpecificTokens = true;
+              
+              // Skip if this underscore is inside single quotes
+              if (!isInsideSingleQuotes(content, underscoreIndexInVal)) {
+                const underscoreOffset = valOffset + val.indexOf(trimmed) + innerStart + underscoreIndexInVal;
+                const underscoreRange = makeRange(document, underscoreOffset, 1);
+                const varIndex = tokenTypes.indexOf('variable');
+                if (varIndex >= 0) {
+                  builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
+                  hasSpecificTokens = true;
+                }
               }
             }
 
@@ -160,6 +181,24 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               }
             }
 
+            // emit percentage tokens inside single-quoted strings only
+            const percentageRegex = /%/g;
+            let percentMatch: RegExpExecArray | null;
+            while ((percentMatch = percentageRegex.exec(content)) !== null) {
+              const percentIndexInVal = percentMatch.index;
+              
+              // Only highlight % if it's inside single quotes
+              if (isInsideSingleQuotes(content, percentIndexInVal)) {
+                const percentOffset = valOffset + val.indexOf(trimmed) + innerStart + percentIndexInVal;
+                const percentRange = makeRange(document, percentOffset, 1);
+                const operatorIndex = tokenTypes.indexOf('operator');
+                if (operatorIndex >= 0) {
+                  builder.push(percentRange.line, percentRange.startChar, percentRange.length, operatorIndex, 0);
+                  hasSpecificTokens = true;
+                }
+              }
+            }
+
             // emit semicolon and colon tokens in values
             const punctuationRegex = /[;:]/g;
             let punctMatch: RegExpExecArray | null;
@@ -170,7 +209,6 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               const punctRange = makeRange(document, punctOffset, 1);
               const keywordIndex = tokenTypes.indexOf('keyword');
               if (keywordIndex >= 0) {
-                console.log(`Emitting punctuation '${punctChar}' at line:${punctRange.line} char:${punctRange.startChar}`);
                 builder.push(punctRange.line, punctRange.startChar, punctRange.length, keywordIndex, 0);
                 hasSpecificTokens = true;
               }
@@ -231,41 +269,53 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             const txtIndex = line.indexOf(txt, leading.length);
             const txtOffset = absoluteOffset + txtIndex;
 
-            // Emit variable tokens for standalone underscores
+            // Emit variable tokens for standalone underscores (skip if inside single quotes)
             const underscoreRegex = /(^|[^A-Za-z0-9_])_(?![A-Za-z0-9_])/g;
             let uMatch: RegExpExecArray | null;
             while ((uMatch = underscoreRegex.exec(txt)) !== null) {
               const leftLen = uMatch[1] ? uMatch[1].length : 0;
               const underscoreIndexInVal = uMatch.index + leftLen;
-              const underscoreOffset = txtOffset + underscoreIndexInVal;
-              const underscoreRange = makeRange(document, underscoreOffset, 1);
-              const varIndex = tokenTypes.indexOf('variable');
-              if (varIndex >= 0) builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
+              
+              // Skip if this underscore is inside single quotes
+              if (!isInsideSingleQuotes(txt, underscoreIndexInVal)) {
+                const underscoreOffset = txtOffset + underscoreIndexInVal;
+                const underscoreRange = makeRange(document, underscoreOffset, 1);
+                const varIndex = tokenTypes.indexOf('variable');
+                if (varIndex >= 0) builder.push(underscoreRange.line, underscoreRange.startChar, underscoreRange.length, varIndex, 0);
+              }
             }
 
-            // Emit operator tokens in array/multiline values
+            // Emit operator tokens in array/multiline values (skip if inside single quotes)
             // Handle word operators (LIKE, IN, etc.) with word boundaries
             const wordOpRegex2 = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
             let wordOpMatch2: RegExpExecArray | null;
             while ((wordOpMatch2 = wordOpRegex2.exec(txt)) !== null) {
               const op = wordOpMatch2[1] || wordOpMatch2[0];
               const opIndexInVal = wordOpMatch2.index;
-              const opOffset = txtOffset + opIndexInVal;
-              const opRange = makeRange(document, opOffset, op.length);
-              const opIndex = tokenTypes.indexOf('operator');
-              if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+              
+              // Skip if this operator is inside single quotes
+              if (!isInsideSingleQuotes(txt, opIndexInVal)) {
+                const opOffset = txtOffset + opIndexInVal;
+                const opRange = makeRange(document, opOffset, op.length);
+                const opIndex = tokenTypes.indexOf('operator');
+                if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+              }
             }
 
-            // Handle symbol operators (=, !=, <>, etc.) without word boundaries
+            // Handle symbol operators (=, !=, <>, etc.) without word boundaries (skip if inside single quotes)
             const symbolOpRegex2 = /(!=|<>|<=|>=|=|<|>|\+|-)/g;
             let symbolOpMatch2: RegExpExecArray | null;
             while ((symbolOpMatch2 = symbolOpRegex2.exec(txt)) !== null) {
               const op = symbolOpMatch2[1] || symbolOpMatch2[0];
               const opIndexInVal = symbolOpMatch2.index;
-              const opOffset = txtOffset + opIndexInVal;
-              const opRange = makeRange(document, opOffset, op.length);
-              const opIndex = tokenTypes.indexOf('operator');
-              if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+              
+              // Skip if this operator is inside single quotes
+              if (!isInsideSingleQuotes(txt, opIndexInVal)) {
+                const opOffset = txtOffset + opIndexInVal;
+                const opRange = makeRange(document, opOffset, op.length);
+                const opIndex = tokenTypes.indexOf('operator');
+                if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+              }
             }
 
             // emit single quote tokens (always part of string content, not delimiters)
@@ -279,6 +329,21 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               if (operatorIndex >= 0) builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
             }
 
+            // emit percentage tokens inside single-quoted strings only
+            const percentageRegex2 = /%/g;
+            let percentMatch2: RegExpExecArray | null;
+            while ((percentMatch2 = percentageRegex2.exec(txt)) !== null) {
+              const percentIndexInVal = percentMatch2.index;
+              
+              // Only highlight % if it's inside single quotes
+              if (isInsideSingleQuotes(txt, percentIndexInVal)) {
+                const percentOffset = txtOffset + percentIndexInVal;
+                const percentRange = makeRange(document, percentOffset, 1);
+                const operatorIndex = tokenTypes.indexOf('operator');
+                if (operatorIndex >= 0) builder.push(percentRange.line, percentRange.startChar, percentRange.length, operatorIndex, 0);
+              }
+            }
+
             // emit semicolon and colon tokens in array/multiline values
             const punctuationRegex2 = /[;:]/g;
             let punctMatch2: RegExpExecArray | null;
@@ -289,7 +354,6 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               const punctRange = makeRange(document, punctOffset, 1);
               const keywordIndex = tokenTypes.indexOf('keyword');
               if (keywordIndex >= 0) {
-                console.log(`Emitting punctuation2 '${punctChar2}' at line:${punctRange.line} char:${punctRange.startChar}`);
                 builder.push(punctRange.line, punctRange.startChar, punctRange.length, keywordIndex, 0);
               }
             }
