@@ -45,6 +45,20 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
         const line = lines[i];
         const absoluteOffset = contentOffset + offsetInContent;
 
+        // Emit semicolon tokens anywhere in the line (global semicolon highlighting)
+        const globalSemicolonRegex = /;/g;
+        let globalSemiMatch: RegExpExecArray | null;
+        while ((globalSemiMatch = globalSemicolonRegex.exec(line)) !== null) {
+          const semiIndexInLine = globalSemiMatch.index;
+          const semiOffset = absoluteOffset + semiIndexInLine;
+          const semiRange = makeRange(document, semiOffset, 1);
+          const keywordIndex = tokenTypes.indexOf('keyword');
+          if (keywordIndex >= 0) {
+            console.log(`Emitting global semicolon at line:${semiRange.line} char:${semiRange.startChar}`);
+            builder.push(semiRange.line, semiRange.startChar, semiRange.length, keywordIndex, 0);
+          }
+        }
+
         // Try a robust same-line key:value match first
         const kvMatch = line.match(/^\s*([^:\n\r]+)\s*:\s*([^;\n\r]+)/);
         if (kvMatch) {
