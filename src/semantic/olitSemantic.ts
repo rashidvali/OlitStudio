@@ -118,6 +118,38 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               }
             }
 
+            // emit single quote tokens (always part of string content, not delimiters)
+            const singleQuoteRegex = /'/g;
+            let sqMatch: RegExpExecArray | null;
+            while ((sqMatch = singleQuoteRegex.exec(content)) !== null) {
+              const quoteIndexInVal = sqMatch.index;
+              const quoteOffset = valOffset + val.indexOf(trimmed) + innerStart + quoteIndexInVal;
+              const quoteRange = makeRange(document, quoteOffset, 1);
+              const operatorIndex = tokenTypes.indexOf('operator');
+              if (operatorIndex >= 0) {
+                builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
+                hasSpecificTokens = true;
+              }
+            }
+
+            // emit double quote tokens only for delimiter quotes (full enclosure)
+            if (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length > 1) {
+              const quoteOffset = valOffset + val.indexOf(trimmed);
+              // Opening quote
+              const openQuoteRange = makeRange(document, quoteOffset, 1);
+              const keywordIndex = tokenTypes.indexOf('keyword');
+              if (keywordIndex >= 0) {
+                builder.push(openQuoteRange.line, openQuoteRange.startChar, openQuoteRange.length, keywordIndex, 0);
+                hasSpecificTokens = true;
+              }
+              // Closing quote
+              const closeQuoteRange = makeRange(document, quoteOffset + trimmed.length - 1, 1);
+              if (keywordIndex >= 0) {
+                builder.push(closeQuoteRange.line, closeQuoteRange.startChar, closeQuoteRange.length, keywordIndex, 0);
+                hasSpecificTokens = true;
+              }
+            }
+
             // Only emit the broad value token if we didn't emit specific tokens
             if (!hasSpecificTokens) {
               const kind = classifyValue(content);
@@ -179,6 +211,17 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               const opRange = makeRange(document, opOffset, op.length);
               const opIndex = tokenTypes.indexOf('operator');
               if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+            }
+
+            // emit single quote tokens (always part of string content, not delimiters)
+            const singleQuoteRegex2 = /'/g;
+            let sqMatch2: RegExpExecArray | null;
+            while ((sqMatch2 = singleQuoteRegex2.exec(txt)) !== null) {
+              const quoteIndexInVal = sqMatch2.index;
+              const quoteOffset = txtOffset + quoteIndexInVal;
+              const quoteRange = makeRange(document, quoteOffset, 1);
+              const operatorIndex = tokenTypes.indexOf('operator');
+              if (operatorIndex >= 0) builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
             }
 
             // Fallback: emit semantic tokens for the content runs (numbers/strings/bools)

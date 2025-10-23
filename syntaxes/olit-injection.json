@@ -42,7 +42,7 @@
         },
         {
           "name": "meta.olitql.rhs.placeholder.simple",
-          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(?:LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)((?:'[^']*')|(?:\"[^\"']*\")|(?:[^\\n;]+))",
+          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(?:LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)((?:\"[^\"']*\")|(?:[^\\n;]+))",
           "captures": {
             "1": { "name": "variable.other.property" },
             "2": { "name": "punctuation.separator.key-value" },
@@ -51,16 +51,7 @@
             "7": { "name": "string" }
           }
         },
-        {
-          "name": "string.quoted.single",
-          "begin": "'",
-          "end": "'",
-          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin" } },
-          "endCaptures": { "0": { "name": "punctuation.definition.string.end" } },
-          "patterns": [
-            { "name": "string.quoted.single", "match": "[^']+" }
-          ]
-        },
+
         {
           "name": "meta.olitql.rhs.placeholder",
           "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)([^\\n;]+)",
@@ -74,18 +65,17 @@
         },
         {
             "name": "meta.key-value.single-line",
-            "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(?:(\"[^\"]*\")|('[^']*')|(\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?(?:Z|[+\\-]\\d{2}:\\d{2})?)?)|(\\d{4}-\\d{2}-\\d{2} \\\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?)|([+-]?\\d+(?:\\.\\d+)?)|(\\b_\\b)|(true|false)\\b|([^\\n;]+)))",
+            "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(?:(\"[^\"]*\")|(\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?(?:Z|[+\\-]\\d{2}:\\d{2})?)?)|(\\d{4}-\\d{2}-\\d{2} \\\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{3})?)?)|([+-]?\\d+(?:\\.\\d+)?)|(\\b_\\b)|(true|false)\\b|([^\\n;]+)))",
             "captures": {
               "1": { "name": "variable.other.property" },
               "2": { "name": "punctuation.separator.key-value" },
               "3": { "name": "string.quoted.double" },
-              "4": { "name": "string.quoted.single" },
+              "4": { "name": "constant.other.date" },
               "5": { "name": "constant.other.date" },
-              "6": { "name": "constant.other.date" },
-              "7": { "name": "constant.numeric" },
-              "8": { "name": "variable.language.olitql" },
-              "9": { "name": "constant.language.boolean" },
-              "10": { "name": "string" }
+              "6": { "name": "constant.numeric" },
+              "7": { "name": "variable.language.olitql" },
+              "8": { "name": "constant.language.boolean" },
+              "9": { "name": "string" }
             }
           },
         {
@@ -100,8 +90,8 @@
           "name": "string.quoted.double",
           "begin": "\"",
           "end": "\"",
-          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin" } },
-          "endCaptures": { "0": { "name": "punctuation.definition.string.end" } },
+          "beginCaptures": { "0": { "name": "keyword.operator" } },
+          "endCaptures": { "0": { "name": "keyword.operator" } },
           "patterns": [
             { "name": "string.quoted.double", "match": "[\\s\\S]+?" }
           ]

@@ -8,7 +8,8 @@ Person:
 `;
 
 const query = q`
-action: _ query
+action: _ 'query'
+vegy: 'bush'
 statement:
 	Business_Employee:
 		F.Name1: _ LIKE 'J%'
