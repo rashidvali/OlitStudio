@@ -3,8 +3,40 @@
   "injectionSelector": "source.ts string.template.ts meta.var.expr.ts",
   "patterns": [
     {
+      "name": "meta.embedded.block.olitdom",
+      "begin": "(d)\\s*`",
+      "end": "`",
+      "beginCaptures": {
+        "1": { "name": "entity.name.function.tagged-template.ts" },
+        "0": { "name": "punctuation.definition.template.begin.ts" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.template.end.ts" }
+      },
+      "contentName": "text.olitdom",
+      "patterns": [
+        { "include": "#olitdom-content" }
+      ]
+    },
+    {
+      "name": "meta.embedded.block.olitql",
+      "begin": "(q)\\s*`",
+      "end": "`",
+      "beginCaptures": {
+        "1": { "name": "entity.name.function.tagged-template.ts" },
+        "0": { "name": "punctuation.definition.template.begin.ts" }
+      },
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.template.end.ts" }
+      },
+      "contentName": "text.olitql",
+      "patterns": [
+        { "include": "#olitql-content" }
+      ]
+    },
+    {
       "name": "meta.embedded.block.olit",
-      "begin": "(n|q|d)\\s*`",
+      "begin": "(n)\\s*`",
       "end": "`",
       "beginCaptures": {
         "1": { "name": "entity.name.function.tagged-template.ts" },
@@ -14,7 +46,80 @@
         "0": { "name": "punctuation.definition.template.end.ts" }
       },
       "contentName": "text.olit",
-       "patterns": [
+      "patterns": [
+        { "include": "#base-olit-content" }
+      ]
+    }
+  ],
+  "repository": {
+    "olitdom-content": {
+      "patterns": [
+        { "include": "#typescript-objects" },
+        { "include": "#base-olit-content" }
+      ]
+    },
+    "typescript-objects": {
+      "patterns": [
+        {
+          "name": "entity.name.type.class",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b(?=\\s*[:{])"
+        },
+        {
+          "name": "entity.name.type.interface",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b(?=\\s*\\.)"
+        },
+        {
+          "name": "variable.other.object",
+          "match": "\\b[a-z][a-zA-Z0-9_]*\\b(?=\\s*[.:])"
+        },
+        {
+          "name": "entity.name.type.enum",
+          "match": "\\b[A-Z][A-Z0-9_]*\\b"
+        },
+        {
+          "name": "variable.other.property",
+          "match": "(?<=\\.)\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "olitql-content": {
+      "patterns": [
+        { "include": "#base-olit-content" },
+        { "include": "#olitql-specific" }
+      ]
+    },
+    "olitql-specific": {
+      "patterns": [
+        {
+          "name": "meta.olitql.rhs.placeholder.simple",
+          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(?:LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)((?:\"[^\"']*\")|(?:[^\\n;]+))",
+          "captures": {
+            "1": { "name": "variable.other.property" },
+            "2": { "name": "punctuation.separator.key-value" },
+            "3": { "name": "variable.language.olitql" },
+            "5": { "name": "keyword.operator" },
+            "7": { "name": "string" }
+          }
+        },
+        {
+          "name": "meta.olitql.rhs.placeholder",
+          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)([^\\n;]+)",
+          "captures": {
+            "1": { "name": "variable.other.property" },
+            "2": { "name": "punctuation.separator.key-value" },
+            "3": { "name": "variable.language.olitql" },
+            "5": { "name": "keyword.operator" },
+            "8": { "name": "string" }
+          }
+        },
+        {
+          "name": "keyword.operator",
+          "match": "\\b(LIKE|IN|BETWEEN|IS|NULL)\\b"
+        }
+      ]
+    },
+    "base-olit-content": {
+      "patterns": [
         {
           "name": "meta.key-only",
           "match": "^\\s*([^:\\n\\r]+)(:)\\s*$",
@@ -39,29 +144,6 @@
         {
           "name": "variable.language.olitql",
           "match": "\\b_\\b"
-        },
-        {
-          "name": "meta.olitql.rhs.placeholder.simple",
-          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(?:LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)((?:\"[^\"']*\")|(?:[^\\n;]+))",
-          "captures": {
-            "1": { "name": "variable.other.property" },
-            "2": { "name": "punctuation.separator.key-value" },
-            "3": { "name": "variable.language.olitql" },
-            "5": { "name": "keyword.operator" },
-            "7": { "name": "string" }
-          }
-        },
-
-        {
-          "name": "meta.olitql.rhs.placeholder",
-          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)(\\b_\\b)(\\s*)(\\b(LIKE|IN|=|!=|<>|<=|>=|<|>)\\b)(\\s*)([^\\n;]+)",
-          "captures": {
-            "1": { "name": "variable.other.property" },
-            "2": { "name": "punctuation.separator.key-value" },
-            "3": { "name": "variable.language.olitql" },
-            "5": { "name": "keyword.operator" },
-            "8": { "name": "string" }
-          }
         },
         {
             "name": "meta.key-value.single-line",
@@ -117,7 +199,7 @@
         },
         {
           "name": "keyword.operator",
-          "match": "\\b(AND|OR|IN|NOT|LIKE|=|!=|<>|<=|>=|<|>)\\b"
+          "match": "\\b(AND|OR|IN|NOT|=|!=|<>|<=|>=|<|>)\\b"
         },
         {
           "name": "constant.numeric",
@@ -133,5 +215,5 @@
         }
       ]
     }
-  ]
+  }
 }

@@ -32,6 +32,51 @@ function isInsideSingleQuotes(text: string, position: number): boolean {
   return quoteCount % 2 === 1; // odd number means we're inside quotes
 }
 
+function isTypeScriptIdentifier(text: string): boolean {
+  return /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(text);
+}
+
+function highlightTypeScriptObjects(line: string, absoluteOffset: number, document: vscode.TextDocument, builder: vscode.SemanticTokensBuilder) {
+  // TypeScript class/interface patterns (PascalCase identifiers)
+  const classPattern = /\b[A-Z][a-zA-Z0-9_]*\b/g;
+  let classMatch: RegExpExecArray | null;
+  while ((classMatch = classPattern.exec(line)) !== null) {
+    const className = classMatch[0];
+    const classOffset = absoluteOffset + classMatch.index;
+    const classRange = makeRange(document, classOffset, className.length);
+    const typeIndex = tokenTypes.indexOf('type');
+    if (typeIndex >= 0) {
+      builder.push(classRange.line, classRange.startChar, classRange.length, typeIndex, 0);
+    }
+  }
+
+  // Variable patterns (camelCase identifiers before dots or colons)
+  const variablePattern = /\b[a-z][a-zA-Z0-9_]*\b(?=\s*[.:])/g;
+  let variableMatch: RegExpExecArray | null;
+  while ((variableMatch = variablePattern.exec(line)) !== null) {
+    const variableName = variableMatch[0];
+    const variableOffset = absoluteOffset + variableMatch.index;
+    const variableRange = makeRange(document, variableOffset, variableName.length);
+    const variableIndex = tokenTypes.indexOf('variable');
+    if (variableIndex >= 0) {
+      builder.push(variableRange.line, variableRange.startChar, variableRange.length, variableIndex, 0);
+    }
+  }
+
+  // Property access patterns (after dots)
+  const propertyPattern = /(?<=\.)\b[a-zA-Z_][a-zA-Z0-9_]*\b/g;
+  let propertyMatch: RegExpExecArray | null;
+  while ((propertyMatch = propertyPattern.exec(line)) !== null) {
+    const propertyName = propertyMatch[0];
+    const propertyOffset = absoluteOffset + propertyMatch.index;
+    const propertyRange = makeRange(document, propertyOffset, propertyName.length);
+    const propertyIndex = tokenTypes.indexOf('property');
+    if (propertyIndex >= 0) {
+      builder.push(propertyRange.line, propertyRange.startChar, propertyRange.length, propertyIndex, 0);
+    }
+  }
+}
+
 export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvider {
   public provideDocumentSemanticTokens(
     document: vscode.TextDocument,
@@ -44,6 +89,7 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
     const re = /(n|q|d)\s*`([\s\S]*?)`/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
+      const tagType = m[1]; // 'n', 'q', or 'd'
       const fullMatch = m[0];
       const content = m[2];
       const matchStart = m.index;
@@ -54,6 +100,11 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const absoluteOffset = contentOffset + offsetInContent;
+
+        // Add TypeScript object highlighting for OlitDOM (d``)
+        if (tagType === 'd') {
+          highlightTypeScriptObjects(line, absoluteOffset, document, builder);
+        }
 
         // Emit semicolon tokens anywhere in the line (global semicolon highlighting)
         const globalSemicolonRegex = /;/g;
@@ -110,21 +161,44 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             let hasSpecificTokens = false;
 
             // emit operator tokens inside the value (skip if inside single quotes)
-            // Handle word operators (LIKE, IN, etc.) with word boundaries
-            const wordOpRegex = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
-            let wordOpMatch: RegExpExecArray | null;
-            while ((wordOpMatch = wordOpRegex.exec(content)) !== null) {
-              const op = wordOpMatch[1] || wordOpMatch[0];
-              const opIndexInVal = wordOpMatch.index;
-              
-              // Skip if this operator is inside single quotes
-              if (!isInsideSingleQuotes(content, opIndexInVal)) {
-                const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
-                const opRange = makeRange(document, opOffset, op.length);
-                const opIndex = tokenTypes.indexOf('operator');
-                if (opIndex >= 0) {
-                  builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
-                  hasSpecificTokens = true;
+            // For OlitQL (q``), include database-specific operators
+            // For OlitDOM (d``) and base Olit (n``), use only basic operators
+            if (tagType === 'q') {
+              // Handle word operators for OlitQL (LIKE, IN, etc.) with word boundaries
+              const wordOpRegex = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
+              let wordOpMatch: RegExpExecArray | null;
+              while ((wordOpMatch = wordOpRegex.exec(content)) !== null) {
+                const op = wordOpMatch[1] || wordOpMatch[0];
+                const opIndexInVal = wordOpMatch.index;
+                
+                // Skip if this operator is inside single quotes
+                if (!isInsideSingleQuotes(content, opIndexInVal)) {
+                  const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
+                  const opRange = makeRange(document, opOffset, op.length);
+                  const opIndex = tokenTypes.indexOf('operator');
+                  if (opIndex >= 0) {
+                    builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                    hasSpecificTokens = true;
+                  }
+                }
+              }
+            } else {
+              // For OlitDOM and base Olit, only basic logical operators
+              const basicWordOpRegex = /\b(AND|OR|NOT)\b/gi;
+              let basicWordOpMatch: RegExpExecArray | null;
+              while ((basicWordOpMatch = basicWordOpRegex.exec(content)) !== null) {
+                const op = basicWordOpMatch[1] || basicWordOpMatch[0];
+                const opIndexInVal = basicWordOpMatch.index;
+                
+                // Skip if this operator is inside single quotes
+                if (!isInsideSingleQuotes(content, opIndexInVal)) {
+                  const opOffset = valOffset + val.indexOf(trimmed) + innerStart + opIndexInVal;
+                  const opRange = makeRange(document, opOffset, op.length);
+                  const opIndex = tokenTypes.indexOf('operator');
+                  if (opIndex >= 0) {
+                    builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                    hasSpecificTokens = true;
+                  }
                 }
               }
             }
@@ -286,19 +360,39 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
             }
 
             // Emit operator tokens in array/multiline values (skip if inside single quotes)
-            // Handle word operators (LIKE, IN, etc.) with word boundaries
-            const wordOpRegex2 = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
-            let wordOpMatch2: RegExpExecArray | null;
-            while ((wordOpMatch2 = wordOpRegex2.exec(txt)) !== null) {
-              const op = wordOpMatch2[1] || wordOpMatch2[0];
-              const opIndexInVal = wordOpMatch2.index;
-              
-              // Skip if this operator is inside single quotes
-              if (!isInsideSingleQuotes(txt, opIndexInVal)) {
-                const opOffset = txtOffset + opIndexInVal;
-                const opRange = makeRange(document, opOffset, op.length);
-                const opIndex = tokenTypes.indexOf('operator');
-                if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+            // For OlitQL (q``), include database-specific operators
+            // For OlitDOM (d``) and base Olit (n``), use only basic operators
+            if (tagType === 'q') {
+              // Handle word operators for OlitQL (LIKE, IN, etc.) with word boundaries
+              const wordOpRegex2 = /\b(LIKE|IN|BETWEEN|IS|NULL|AND|OR|NOT)\b/gi;
+              let wordOpMatch2: RegExpExecArray | null;
+              while ((wordOpMatch2 = wordOpRegex2.exec(txt)) !== null) {
+                const op = wordOpMatch2[1] || wordOpMatch2[0];
+                const opIndexInVal = wordOpMatch2.index;
+                
+                // Skip if this operator is inside single quotes
+                if (!isInsideSingleQuotes(txt, opIndexInVal)) {
+                  const opOffset = txtOffset + opIndexInVal;
+                  const opRange = makeRange(document, opOffset, op.length);
+                  const opIndex = tokenTypes.indexOf('operator');
+                  if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                }
+              }
+            } else {
+              // For OlitDOM and base Olit, only basic logical operators
+              const basicWordOpRegex2 = /\b(AND|OR|NOT)\b/gi;
+              let basicWordOpMatch2: RegExpExecArray | null;
+              while ((basicWordOpMatch2 = basicWordOpRegex2.exec(txt)) !== null) {
+                const op = basicWordOpMatch2[1] || basicWordOpMatch2[0];
+                const opIndexInVal = basicWordOpMatch2.index;
+                
+                // Skip if this operator is inside single quotes
+                if (!isInsideSingleQuotes(txt, opIndexInVal)) {
+                  const opOffset = txtOffset + opIndexInVal;
+                  const opRange = makeRange(document, opOffset, op.length);
+                  const opIndex = tokenTypes.indexOf('operator');
+                  if (opIndex >= 0) builder.push(opRange.line, opRange.startChar, opRange.length, opIndex, 0);
+                }
               }
             }
 
