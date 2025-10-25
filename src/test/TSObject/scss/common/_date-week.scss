@@ -1,0 +1,81 @@
+@use '../custom' as *;
+@use '../common/mixins' as *;
+
+.week-calendar {
+
+    .week-day-small {
+        width: 11rem;
+        font-size: 11pt;
+    }
+
+    .vertical-text {
+        writing-mode: vertical-lr;
+        width: 1rem;
+        overflow: hidden;
+    }
+
+    .week-day-name {
+        font-size: medium;
+        text-align: center;
+    }
+
+    .date-day {
+        font-weight: bold;
+        text-align: center;
+        font-size: x-large;
+        width: 14%;
+        padding-top: 1.5rem;
+        padding-bottom: 1.7rem;
+
+        @include media-breakpoint-down(sm) {
+            font-size: small;
+        }
+    }
+
+    .day-month {
+        font-size: xx-small;
+    }
+
+    .large-screen-content {
+        display: contents;
+        
+        @include media-breakpoint-down(sm) {
+            display: none;
+        }
+    }
+
+    .large-screen-element {
+        display: flow-root;
+        
+        @include media-breakpoint-down(sm) {
+            display: none;
+        }
+    }
+
+    .small-screen-element {
+        display: none;
+        
+        @include media-breakpoint-down(sm) {
+            display: flow-root;
+        }
+    }
+
+    .date-nav-left {
+        padding-left: 3px; 
+        color: #adadad;    
+
+        @include media-breakpoint-down(sm) {
+            padding-left: 1px;        
+        }
+    }
+
+    .date-nav-right {
+        padding-right: 3px; 
+        color: #adadad;
+
+        @include media-breakpoint-down(sm) {
+            padding-right: 1px;        
+        }
+    }
+}
+

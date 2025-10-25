@@ -150,9 +150,21 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
           const trimmed = val.trim();
           let innerStart = 0;
           let innerLen = trimmed.length;
-          if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
-            innerStart = 1;
-            innerLen = trimmed.length - 2;
+          
+          // Handle quotes based on tag type
+          if (tagType === 'd') {
+            // OlitDOM: Only double quotes are string delimiters, single quotes are content
+            if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+              innerStart = 1;
+              innerLen = trimmed.length - 2;
+            }
+            // Single quotes are treated as part of content, not delimiters
+          } else {
+            // OlitQL and base Olit: Both single and double quotes are delimiters
+            if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+              innerStart = 1;
+              innerLen = trimmed.length - 2;
+            }
           }
           if (innerLen > 0) {
             const content = trimmed.substring(innerStart, innerStart + innerLen);
@@ -241,17 +253,34 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               }
             }
 
-            // emit single quote tokens (always part of string content, not delimiters)
-            const singleQuoteRegex = /'/g;
-            let sqMatch: RegExpExecArray | null;
-            while ((sqMatch = singleQuoteRegex.exec(content)) !== null) {
-              const quoteIndexInVal = sqMatch.index;
-              const quoteOffset = valOffset + val.indexOf(trimmed) + innerStart + quoteIndexInVal;
-              const quoteRange = makeRange(document, quoteOffset, 1);
-              const operatorIndex = tokenTypes.indexOf('operator');
-              if (operatorIndex >= 0) {
-                builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
-                hasSpecificTokens = true;
+            // Handle single quote tokens based on tag type
+            if (tagType === 'd') {
+              // OlitDOM: Single quotes are just content, highlight as string content
+              const singleQuoteRegex = /'/g;
+              let sqMatch: RegExpExecArray | null;
+              while ((sqMatch = singleQuoteRegex.exec(content)) !== null) {
+                const quoteIndexInVal = sqMatch.index;
+                const quoteOffset = valOffset + val.indexOf(trimmed) + innerStart + quoteIndexInVal;
+                const quoteRange = makeRange(document, quoteOffset, 1);
+                const stringIndex = tokenTypes.indexOf('string');
+                if (stringIndex >= 0) {
+                  builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, stringIndex, 0);
+                  hasSpecificTokens = true;
+                }
+              }
+            } else {
+              // OlitQL and base Olit: Single quotes are operators/delimiters
+              const singleQuoteRegex = /'/g;
+              let sqMatch: RegExpExecArray | null;
+              while ((sqMatch = singleQuoteRegex.exec(content)) !== null) {
+                const quoteIndexInVal = sqMatch.index;
+                const quoteOffset = valOffset + val.indexOf(trimmed) + innerStart + quoteIndexInVal;
+                const quoteRange = makeRange(document, quoteOffset, 1);
+                const operatorIndex = tokenTypes.indexOf('operator');
+                if (operatorIndex >= 0) {
+                  builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
+                  hasSpecificTokens = true;
+                }
               }
             }
 
@@ -412,15 +441,29 @@ export class OlitSemanticProvider implements vscode.DocumentSemanticTokensProvid
               }
             }
 
-            // emit single quote tokens (always part of string content, not delimiters)
-            const singleQuoteRegex2 = /'/g;
-            let sqMatch2: RegExpExecArray | null;
-            while ((sqMatch2 = singleQuoteRegex2.exec(txt)) !== null) {
-              const quoteIndexInVal = sqMatch2.index;
-              const quoteOffset = txtOffset + quoteIndexInVal;
-              const quoteRange = makeRange(document, quoteOffset, 1);
-              const operatorIndex = tokenTypes.indexOf('operator');
-              if (operatorIndex >= 0) builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
+            // Handle single quote tokens based on tag type (array/multiline context)
+            if (tagType === 'd') {
+              // OlitDOM: Single quotes are just content, highlight as string content
+              const singleQuoteRegex2 = /'/g;
+              let sqMatch2: RegExpExecArray | null;
+              while ((sqMatch2 = singleQuoteRegex2.exec(txt)) !== null) {
+                const quoteIndexInVal = sqMatch2.index;
+                const quoteOffset = txtOffset + quoteIndexInVal;
+                const quoteRange = makeRange(document, quoteOffset, 1);
+                const stringIndex = tokenTypes.indexOf('string');
+                if (stringIndex >= 0) builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, stringIndex, 0);
+              }
+            } else {
+              // OlitQL and base Olit: Single quotes are operators/delimiters
+              const singleQuoteRegex2 = /'/g;
+              let sqMatch2: RegExpExecArray | null;
+              while ((sqMatch2 = singleQuoteRegex2.exec(txt)) !== null) {
+                const quoteIndexInVal = sqMatch2.index;
+                const quoteOffset = txtOffset + quoteIndexInVal;
+                const quoteRange = makeRange(document, quoteOffset, 1);
+                const operatorIndex = tokenTypes.indexOf('operator');
+                if (operatorIndex >= 0) builder.push(quoteRange.line, quoteRange.startChar, quoteRange.length, operatorIndex, 0);
+              }
             }
 
             // emit percentage tokens inside single-quoted strings only

@@ -55,7 +55,43 @@
     "olitdom-content": {
       "patterns": [
         { "include": "#typescript-objects" },
+        { "include": "#olitdom-strings" },
         { "include": "#base-olit-content" }
+      ]
+    },
+    "olitdom-strings": {
+      "patterns": [
+        {
+          "name": "meta.key-value.olitdom",
+          "match": "^\\s*([^:\\n\\r]+)(\\s*:\\s*)([^\\n;]+)",
+          "captures": {
+            "1": { "name": "variable.other.property" },
+            "2": { "name": "punctuation.separator.key-value" },
+            "3": { 
+              "patterns": [
+                {
+                  "name": "string.quoted.double.olitdom",
+                  "match": "\"([^\"]*)\""
+                },
+                {
+                  "name": "string.unquoted.olitdom", 
+                  "match": "[^\\n;]+"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "string.quoted.double.olitdom",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "string.quoted.double.content.olitdom",
+              "match": "[^\"]*"
+            }
+          ]
+        }
       ]
     },
     "typescript-objects": {

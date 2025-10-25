@@ -30,6 +30,11 @@
           "source.ts",
           "string.template.ts"
         ]
+      },
+      {
+        "path": "./syntaxes/olitdom.tmLanguage.json",
+        "scopeName": "source.olitdom",
+        "extensions": [".olitdom"]
       }
     ]
   },

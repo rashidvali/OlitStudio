@@ -1,0 +1,9 @@
+@use '../custom' as *;
+@use '../common/mixins' as *;
+
+.full-wide {
+    width: 100%;
+    // background-color: pink;
+    // height: 14rem;
+}
+

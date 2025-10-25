@@ -1,0 +1,60 @@
+[
+    {
+        "Person": {            
+            "FirstName": "string",
+            "LastName": "string",
+            "HomeAddress": [
+                "Address"
+            ],
+            "SalesOrder": [
+                "Order[]"
+            ]
+        }
+    },
+    {
+        "Address": {            
+            "Street": "string",
+            "Apartment": "string",
+            "City": "string",
+            "State": "string",
+            "ZIP": "string"
+        }
+    },
+    {
+        "Order": {            
+            "OrderNumber": "string",
+            "Amount": "money",
+            "Currency": "string",
+            "OrderDetails": [
+                "OrderDetail[]"
+            ]
+        }
+    },
+    {
+        "OrderDetail": {            
+            "SalesOrderID": "int",
+            "SalesOrderDetailID": "int",
+            "OrderQty": "int",
+            "ProductID": "int",
+            "UnitPrice": "money",
+            "LineTotal": "money"
+        }
+    },
+    {
+        "Person": {
+            "HomeAddress": {
+                "CARDINALITY": 1,
+                "Address": {}
+            },
+            "SalesOrder": {
+                "CARDINALITY": "*",
+                "Order": {
+                    "OrderDetails": {
+                        "CARDINALITY": "*",
+                        "OrderDetail": {}
+                    }
+                }
+            }
+        }
+    }
+]

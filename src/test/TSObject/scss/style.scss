@@ -1,0 +1,102 @@
+@use "custom" as *;
+
+// Import common styles
+@use 'common/animations';
+@use 'common/buttons';
+@use 'common/mixins';
+@use 'common/typography';
+
+@use 'common/updates-carousel';
+@use 'common/frame';
+@use 'common/date-week';
+
+@use 'sections/header';
+@use 'sections/footer';
+
+// Import component styles
+@use "components/navigatable";
+@use "components/app-header";
+@use "components/app-header-gap";
+@use "components/app-footer-gap";
+@use "components/main-header";
+@use "components/user-credentials";
+
+.global {
+    background-color: rgba($bluish-gray, 0.95); // $bluish-gray-pale; // 
+    color: #ffe7cc;
+}
+
+.storearea {
+    display: none;
+}
+
+// table, th, td {
+//     border: 1px solid black;
+//     // border-collapse: collapse;
+// }
+
+.update-page {
+    img {
+        width: 100px;
+        height: 100px;
+    }
+
+    .left-img {
+        margin-left: 20%;
+    }
+
+    .right-img {
+        padding-right: 20%;
+    }
+}
+
+.chart-page {
+    img {
+        width: 100px;
+        height: 100px;
+    }
+
+    .left-img {
+        margin-left: 20%;
+    }
+
+    .right-img {
+        padding-right: 20%;
+    }
+}
+
+.left-margine-1 {
+    margin-left: 2rem;
+
+    @include media-breakpoint-down(sm){
+        margin-left: 0;
+    }
+}
+
+.left-margine-2 {
+    margin-left: 2rem;
+
+    // @include media-breakpoint-down(sm){
+    //     margin-left: 1rem;
+    // }
+}
+
+.web-visual {
+    display: block;
+    visibility: visible;
+
+    @include media-breakpoint-down(md) {
+        display: none;
+        visibility: hidden;
+    }
+}
+
+.mobile-visual {
+    display: none;
+    visibility: hidden;
+
+    @include media-breakpoint-down(md) {
+        display: block;
+        visibility: visible;
+    }
+}

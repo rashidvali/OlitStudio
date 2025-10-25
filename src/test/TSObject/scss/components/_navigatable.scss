@@ -1,0 +1,34 @@
+@use "../../scss/custom" as *;
+@use "../../scss/common/mixins" as *;
+
+.menu {
+    @include gradient;
+
+    li {
+        padding: 0 0.7rem;
+
+        a {
+            color: rgb(60, 177, 138); // rgba(210, 190, 30); // rgba(258, 235, 235); // $white;
+            text-transform: capitalize;
+            font-weight: 600;
+            font-size: medium;
+            cursor: pointer;
+
+            @include media-breakpoint-down(xs){
+                font-size: 15px;
+            }
+    
+            @include media-breakpoint-up(lg) {
+                font-size: large;
+            }
+        }
+
+        @include media-breakpoint-down(xs){
+            padding: 0 0.0rem;
+        }
+
+        @include media-breakpoint-up(lg){
+            padding: 0 1.0rem;
+        }
+    }
+}
