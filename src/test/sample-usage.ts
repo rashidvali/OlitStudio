@@ -2,6 +2,8 @@ import { n } from "../olitcore";
 import { q } from "../olitql";
 import { d, html } from "../olitdom";
 
+import { MyTestClass2 } from "./runTest";
+
 // Import some TypeScript objects for testing "Go to Definition"
 import { AppPartType } from "./TSObject/Domoliter/AppPartType";
 
@@ -31,6 +33,14 @@ class BaseButton {
 
 class BaseComponent {
     render() { }
+}
+
+class MyTestClass1{
+	method1() {}
+}
+
+function MyFunction1(): void{
+	// do nothing
 }
 
 // Base Olit Notation (n``)
@@ -196,6 +206,9 @@ class: BaseForm
 interface: IFormProps
 inner_html: TemplateResult<1>
 template_ref: formTemplate
+function: MyFunction1 
+class1: MyTestClass1
+class2: MyTestClass2
 validation:
 	required: [email, password]
 	patterns:
