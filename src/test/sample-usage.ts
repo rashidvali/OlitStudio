@@ -2,10 +2,12 @@ import { n } from "../olitcore";
 import { q } from "../olitql";
 import { d, html } from "../olitdom";
 
-import { MyTestClass2 } from "./runTest";
+import { MyTestClass20 } from "./runTest";
 
 // Import some TypeScript objects for testing "Go to Definition"
 import { AppPartType } from "./TSObject/Domoliter/AppPartType";
+
+var x = 5;
 
 // Define some interfaces for testing Go to Definition
 interface IButtonProps {
@@ -35,7 +37,7 @@ class BaseComponent {
     render() { }
 }
 
-class MyTestClass1{
+class MyTestClass10{
 	method1() {}
 }
 
@@ -87,6 +89,7 @@ enum: ButtonVariant
 	PRIMARY: 'primary'
 	SECONDARY: 'secondary' 
 	DANGER: 'danger'
+stage: x
 `;
 
 // OlitDOM for Domolite framework - replacing TypeScript interface syntax
@@ -207,8 +210,8 @@ interface: IFormProps
 inner_html: TemplateResult<1>
 template_ref: formTemplate
 function: MyFunction1 
-class1: MyTestClass1
-class2: MyTestClass2
+class1: MyTestClass10
+class2: MyTestClass20
 validation:
 	required: [email, password]
 	patterns:

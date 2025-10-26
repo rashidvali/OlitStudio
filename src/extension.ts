@@ -4,6 +4,7 @@ import { q } from './olitql';
 import { d } from './olitdom';
 import { OlitSemanticProvider, legend } from './semantic/olitSemantic';
 import { OlitDefinitionProvider } from './semantic/olitDefinition';
+import { OlitRenameProvider } from './semantic/olitRename';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('OLIT extension activated!');
@@ -24,6 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
     const definitionProvider = new OlitDefinitionProvider();
     const definitionDisposable = vscode.languages.registerDefinitionProvider(selector, definitionProvider);
     context.subscriptions.push(definitionDisposable);
+
+    // Register the Rename Provider for renaming symbols
+    const renameProvider = new OlitRenameProvider();
+    const renameDisposable = vscode.languages.registerRenameProvider(selector, renameProvider);
+    context.subscriptions.push(renameDisposable);
 
     return { n, q, d };
 }

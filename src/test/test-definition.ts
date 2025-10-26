@@ -1,4 +1,5 @@
-// Test file for OlitDOM "Go to Definition" functionality
+// Test file for OlitDOM "Go to Definition" and "Rename" functionality
+import { d } from '../olitdom';
 
 class TestClass {
     name: string;
