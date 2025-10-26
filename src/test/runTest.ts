@@ -37,6 +37,6 @@ inner_html:
 		<!-- app-footer -->
 	</div>
 `;
-export class MyTestClass20{
+export class MyTestClass2{
 	method1() {}
 }

@@ -5,6 +5,7 @@ import { d } from './olitdom';
 import { OlitSemanticProvider, legend } from './semantic/olitSemantic';
 import { OlitDefinitionProvider } from './semantic/olitDefinition';
 import { OlitRenameProvider } from './semantic/olitRename';
+import { OlitReferenceProvider } from './semantic/olitReference';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('OLIT extension activated!');
@@ -30,6 +31,11 @@ export function activate(context: vscode.ExtensionContext) {
     const renameProvider = new OlitRenameProvider();
     const renameDisposable = vscode.languages.registerRenameProvider(selector, renameProvider);
     context.subscriptions.push(renameDisposable);
+
+    // Register the Reference Provider for finding all references
+    const referenceProvider = new OlitReferenceProvider();
+    const referenceDisposable = vscode.languages.registerReferenceProvider(selector, referenceProvider);
+    context.subscriptions.push(referenceDisposable);
 
     return { n, q, d };
 }

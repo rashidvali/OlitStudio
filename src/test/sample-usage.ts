@@ -2,7 +2,7 @@ import { n } from "../olitcore";
 import { q } from "../olitql";
 import { d, html } from "../olitdom";
 
-import { MyTestClass20 } from "./runTest";
+import { MyTestClass2 } from "./runTest";
 
 // Import some TypeScript objects for testing "Go to Definition"
 import { AppPartType } from "./TSObject/Domoliter/AppPartType";
@@ -37,7 +37,7 @@ class BaseComponent {
     render() { }
 }
 
-class MyTestClass10{
+class MyTestClass1{
 	method1() {}
 }
 
@@ -210,8 +210,8 @@ interface: IFormProps
 inner_html: TemplateResult<1>
 template_ref: formTemplate
 function: MyFunction1 
-class1: MyTestClass10
-class2: MyTestClass20
+class1: MyTestClass1
+class2: MyTestClass2
 validation:
 	required: [email, password]
 	patterns:

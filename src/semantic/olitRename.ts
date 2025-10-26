@@ -5,16 +5,6 @@ export class OlitRenameProvider implements vscode.RenameProvider {
     prepareRename(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<{ range: vscode.Range; placeholder: string; } | vscode.Range> {
         console.log('OlitRename: prepareRename called at position:', position);
         
-        // Check if we're inside a d`` template
-        const text = document.getText();
-        const offset = document.offsetAt(position);
-        
-        const templateMatch = this.findContainingDTemplate(text, offset);
-        if (!templateMatch) {
-            console.log('OlitRename: not inside d`` template, rejecting');
-            throw new Error('Renaming is only supported inside d`` templates');
-        }
-        
         // Get the word at the position
         const wordRange = document.getWordRangeAtPosition(position, /\b[A-Za-z_$][A-Za-z0-9_$]*\b/);
         if (!wordRange) {
@@ -25,9 +15,9 @@ export class OlitRenameProvider implements vscode.RenameProvider {
         const word = document.getText(wordRange);
         console.log('OlitRename: preparing to rename word:', word);
         
-        // Check if this is a TypeScript symbol that can be renamed
-        if (!this.isTypeScriptSymbol(document, word)) {
-            console.log('OlitRename: not a TypeScript symbol, rejecting');
+        // Check if this is a TypeScript symbol that can be renamed (either defined locally or used in templates)
+        if (!this.isTypeScriptSymbol(document, word) && !this.isUsedInTemplates(document, word)) {
+            console.log('OlitRename: not a TypeScript symbol or used in templates, rejecting');
             throw new Error('This symbol cannot be renamed');
         }
         
@@ -105,6 +95,23 @@ export class OlitRenameProvider implements vscode.RenameProvider {
         const defaultImportRegex = new RegExp(`import\\s+${word}\\s+from`, 'g');
         
         return patterns.some(regex => regex.test(text)) || importRegex.test(text) || defaultImportRegex.test(text);
+    }
+
+    private isUsedInTemplates(document: vscode.TextDocument, word: string): boolean {
+        // Check if the word is used inside any d`` templates
+        const text = document.getText();
+        const dTemplateRegex = /d\s*`([\s\S]*?)`/g;
+        let match: RegExpExecArray | null;
+        
+        while ((match = dTemplateRegex.exec(text)) !== null) {
+            const templateContent = match[1];
+            const wordRegex = new RegExp(`\\b${word}\\b`, 'g');
+            if (wordRegex.test(templateContent)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private isValidIdentifier(name: string): boolean {
